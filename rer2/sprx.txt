@@ -1,0 +1,4 @@
+#/dev_hdd0/tmp/TEST.sprx
+#/dev_hdd0/z/prx/video_rec.sprx
+#/dev_hdd0/plugins/ps3_menu/ps3_game_menu.sprx
+/dev_hdd0/z/prx/trainer.sprx
