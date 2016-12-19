@@ -78,10 +78,34 @@ static inline void _sys_ppu_thread_exit(uint64_t val)
 	system_call_1(41, val);
 }
 
+static uint64_t lv2peek(uint64_t addr)
+{
+	system_call_1(6, addr);
+	return_to_user_prog(uint64_t);
+}
+
+static uint8_t dex_kernel = 0;
+
+static void get_kernel(void)
+{
+	uint64_t toc = lv2peek(0x8000000000003000ULL);
+	if( toc > 0x8000000000360000ULL ) dex_kernel = 1;
+}
+
 static int32_t write_process(uint64_t ea, const void * data, uint32_t size)
 {
-	system_call_4(905, (uint64_t)sys_process_getpid(), ea, size, (uint64_t)data);
-	return_to_user_prog(int32_t);
+	get_kernel();
+	
+	if (dex_kernel)
+	{
+		system_call_4(905, (uint64_t)sys_process_getpid(), ea, size, (uint64_t)data);
+		return_to_user_prog(int32_t);
+	}
+	else
+	{
+		system_call_4(201, (uint64_t)sys_process_getpid(), ea, size, (uint64_t)data);
+		return_to_user_prog(int32_t);
+	}
 }
 
 //callback function for cellMsgDialogOpen2()
@@ -526,6 +550,11 @@ int trainer_start(void)
     sys_ppu_thread_t thread_id;
     sys_ppu_thread_create(&thread_id, thread_entry, 0, 1000, 0x1000, 0, "Cheat_Thread");
 
-	_sys_ppu_thread_exit(0);
+	get_kernel();
+	
+	if (dex_kernel)
+	{
+		_sys_ppu_thread_exit(0);
+	}
     return SYS_PRX_RESIDENT;
 }

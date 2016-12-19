@@ -2,7 +2,7 @@
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #                                       	   			  #
 #   Simple PRX trainer                    				  #
-#   for Metal Gear Solid 5: Ground Zeroes BLUS31369 v1.0  #
+#   for Splinter Cell Blacklist BLES01766 v1.00  #
 #   with Playstation 3 System GUI         				  #
 #                                         				  #
 #   by dron_3                             				  #
@@ -34,11 +34,11 @@ int trainer_start(void);
 #define CHEAT_HP		(1 << 0)
 #define CHEAT_AMMO		(1 << 1)
 #define CHEAT_INVISI			(1 << 2)
-#define CHEAT_GRENA			(1 << 3)
-#define CHEAT_SUPRE			(1 << 4)
-#define CHEAT_ALL			(1 << 5)
-#define CHEAT_STATS			(1 << 6)
-// #define CHEAT_GOD			(1 << 7)
+#define CHEAT_MONEY			(1 << 3)
+// #define CHEAT_SUPRE			(1 << 4)
+// #define CHEAT_ALL			(1 << 5)
+// #define CHEAT_STATS			(1 << 6)
+#define CHEAT_GOD			(1 << 4)
 // #define CHEAT_GUNS			(1 << 8)
 
 int cheatFlags = 0;
@@ -55,8 +55,8 @@ int dialogState = STATE_IDLE;
 
 //message dialog variables
 // char optionsString[512] = "1. Infinite HP: OFF\n2. Infinite Ammo: OFF\n3. Invisible: OFF\n4. Infinite Grenades: OFF\n5. Infinite Bottles: OFF\n6. Max BP: OFF\n7. Max Skill: OFF\n8. Gun Speed Up: OFF\n\n\nDo you want to change options?\n";
-char optionsString[512] = "1. Infinite HP: OFF\n2. Infinite Ammo: OFF\n3. Invisible: OFF\n4. Infinite Grenades: OFF\n5. Infinite Supressors: OFF\n6. All Weapons have Supressors: OFF\n7. Good Stats: OFF\n\n\nMöchtest du die Einstellungen ändern?\n";
-const int resultNumChars = 4;
+char optionsString[512] = "1. Infinite HP: OFF\n2. Infinite Ammo: OFF\n3. Invisible: OFF\n4. Max Money: OFF\n5. God Mode: OFF\n\n\nMöchtest du die Einstellungen ändern?\n";
+const int resultNumChars = 8;
 
 //on-screen keyboard dialog variables
 CellOskDialogInputFieldInfo inputFieldInfo;
@@ -78,10 +78,35 @@ static inline void _sys_ppu_thread_exit(uint64_t val)
 	system_call_1(41, val);
 }
 
+static uint64_t lv2peek(uint64_t addr)
+{
+	system_call_1(6, addr);
+	return_to_user_prog(uint64_t);
+}
+
+static uint8_t dex_kernel = 0;
+
+static void get_kernel(void)
+{
+	uint64_t toc = lv2peek(0x8000000000003000ULL);
+	if( toc > 0x8000000000360000ULL ) dex_kernel = 1;
+}
+
 static int32_t write_process(uint64_t ea, const void * data, uint32_t size)
 {
-	system_call_4(905, (uint64_t)sys_process_getpid(), ea, size, (uint64_t)data);
-	return_to_user_prog(int32_t);
+	get_kernel();
+	
+	if (dex_kernel)
+	{
+		system_call_4(905, (uint64_t)sys_process_getpid(), ea, size, (uint64_t)data);
+		return_to_user_prog(int32_t);
+	}
+	else
+	{
+		system_call_4(201, (uint64_t)sys_process_getpid(), ea, size, (uint64_t)data);
+		return_to_user_prog(int32_t);
+	}
+
 }
 
 //callback function for cellMsgDialogOpen2()
@@ -219,21 +244,21 @@ static int uglycheatmenufunction(void)
             break;
 
         case '4':
-            if(cheatFlags & CHEAT_GRENA)
+            if(cheatFlags & CHEAT_MONEY)
             {
-                cheatFlags = cheatFlags ^ CHEAT_GRENA;
-                optionsString[83] = 'F';
-                optionsString[84] = 'F';
+                cheatFlags = cheatFlags ^ CHEAT_MONEY;
+                optionsString[75] = 'F';
+                optionsString[76] = 'F';
             }
             else
             {
-                cheatFlags = cheatFlags | CHEAT_GRENA;
-                optionsString[83] = 'N';
-                optionsString[84] = ' ';
+                cheatFlags = cheatFlags | CHEAT_MONEY;
+                optionsString[75] = 'N';
+                optionsString[76] = ' ';
             }
             break;
 
-        case '5':
+/*         case '5':
             if(cheatFlags & CHEAT_SUPRE)
             {
                 cheatFlags = cheatFlags ^ CHEAT_SUPRE;
@@ -275,25 +300,25 @@ static int uglycheatmenufunction(void)
                 cheatFlags = cheatFlags | CHEAT_STATS;
                 optionsString[166] = 'N';
                 optionsString[167] = ' ';
-            }
+            } */
             break;
 
-/*         case '8':
+        case '5':
             if(cheatFlags & CHEAT_GOD)
             {
                 cheatFlags = cheatFlags ^ CHEAT_GOD;
-                optionsString[168] = 'F';
-                optionsString[169] = 'F';
+                optionsString[92] = 'F';
+                optionsString[93] = 'F';
             }
             else
             {
                 cheatFlags = cheatFlags | CHEAT_GOD;
-                optionsString[168] = 'N';
-                optionsString[169] = ' ';
+                optionsString[92] = 'N';
+                optionsString[93] = ' ';
             }
             break;
 
-        case '9':
+/*         case '9':
             if(cheatFlags & CHEAT_GUNS)
             {
                 cheatFlags = cheatFlags ^ CHEAT_GUNS;
@@ -345,7 +370,7 @@ static void thread_entry(uint64_t arg)
                             CELL_MSGDIALOG_TYPE_DEFAULT_CURSOR_NONE |
                             CELL_MSGDIALOG_TYPE_PROGRESSBAR_NONE,
                             // "PRX trainer by dron_3\nResident Evil Revelations 2 (BLES02040) by rippchen\n\nPress SELECT+START during game\n", dialog_callback, 0, 0);
-                            "PRX trainer by dron_3\nMetal Gear Solid 5: Ground Zeroes (BLUS31369)\n\nDrücke SELECT+START während dem Spiel\n", dialog_callback, 0, 0);
+                            "PRX trainer by dron_3\nSplinter Cell Blacklist (BLES01766)\n\nDrücke SELECT+START während dem Spiel\n", dialog_callback, 0, 0);
 
     while(1)
     {
@@ -394,59 +419,59 @@ static void thread_entry(uint64_t arg)
             break;
 
         //write value depending on cheat flags
-        if(*(uint32_t*)0x00B0EE70 != 0)
+        if(*(uint32_t*)0x007564A8 != 0)
         {
             if(cheatFlags & CHEAT_HP)
 			{
 				// uint32_t code_bytes[1]; // uint32_t = Uint32[]
 				// unsigned char code_bytes[0] = 38604E209065001C9065002090650024;
-				unsigned char code_bytes[] = { 0x38, 0x60, 0x4E, 0x20, 0x90, 0x65, 0x00, 0x1C, 0x90, 0x65, 0x00, 0x20, 0x90, 0x65, 0x00, 0x24 };
-				write_process(0x00B0EE70, &code_bytes, 16);
+				unsigned char code_bytes[] = { 0xC3, 0xE3, 0x00, 0x68, 0xD3, 0xE3, 0x00, 0x6C };
+				write_process(0x007564A8, &code_bytes, 8);
 			}
             if(!(cheatFlags & CHEAT_HP))
 			{
-				unsigned char code_bytes[] = { 0x80, 0x65, 0x00, 0x1C, 0x2C, 0x03, 0x00, 0x00, 0x41, 0x81, 0x00, 0x08, 0x38, 0x80, 0x00, 0x01 };
-				write_process(0x00B0EE70, &code_bytes, 16);
+				unsigned char code_bytes[] = { 0xFF, 0xE0, 0x08, 0x90, 0x80, 0x7C, 0x04, 0xE0 };
+				write_process(0x007564A8, &code_bytes, 8);
 			}
 
             if(cheatFlags & CHEAT_AMMO)
 			{
-				unsigned char code_bytes[] = { 0x30, 0xA4, 0x00, 0x00 };
-				write_process(0x00BCE840, &code_bytes, 4);
+				unsigned char code_bytes[] = { 0x90, 0x7C, 0x00, 0x04 };
+				write_process(0x0054F740, &code_bytes, 4);
 			}
             if(!(cheatFlags & CHEAT_AMMO))
 			{
-				unsigned char code_bytes[] = { 0x30, 0xA4, 0xFF, 0xFF };
-				write_process(0x00BCE840, &code_bytes, 4);
+				unsigned char code_bytes[] = { 0x93, 0xBC, 0x00, 0x04 };
+				write_process(0x0054F740, &code_bytes, 4);
 			}
 
             if(cheatFlags & CHEAT_INVISI)
 			{
-				unsigned char code_bytes1[] = { 0x48, 0x00, 0x00, 0x30 };
-				unsigned char code_bytes2[] = { 0x48, 0x00, 0x00, 0x48 };
-				write_process(0x004904BC, &code_bytes1, 4);
-				write_process(0x00A77000, &code_bytes2, 4);
+				unsigned char code_bytes[] = { 0x64, 0x63, 0x04, 0x00, 0x90, 0x64, 0x04, 0xE4, 0x48, 0x00, 0x00, 0xA8 };
+				// unsigned char code_bytes2[] = { 0x48, 0x00, 0x00, 0x48 };
+				write_process(0x008B05D8, &code_bytes, 12);
+				// write_process(0x00A77000, &code_bytes2, 4);
 			}
             if(!(cheatFlags & CHEAT_INVISI))
 			{
-				unsigned char code_bytes1[] = { 0x41, 0x82, 0x00, 0x30 };
-				unsigned char code_bytes2[] = { 0x41, 0x82, 0x00, 0x14 };
-				write_process(0x004904BC, &code_bytes1, 4);
-				write_process(0x00A77000, &code_bytes2, 4);
+				unsigned char code_bytes[] = { 0x54, 0x63, 0x37, 0xFE, 0x2C, 0x03, 0x00, 0x00, 0x40, 0x82, 0x00, 0xA8 };
+				// unsigned char code_bytes2[] = { 0x41, 0x82, 0x00, 0x14 };
+				write_process(0x008B05D8, &code_bytes, 12);
+				// write_process(0x00A77000, &code_bytes2, 4);
 			}
 
-            if(cheatFlags & CHEAT_GRENA)
+            if(cheatFlags & CHEAT_MONEY)
 			{
-				unsigned char code_bytes[] = { 0x7F, 0xC5, 0xF3, 0x78 };
-				write_process(0x00A168F4, &code_bytes, 4);
+				unsigned char code_bytes[] = { 0x3C, 0xA0, 0x3B, 0x9A, 0x60, 0xA5, 0xC9, 0xFF };
+				write_process(0x005E08B8, &code_bytes, 8);
 			}
-            if(!(cheatFlags & CHEAT_GRENA))
+            if(!(cheatFlags & CHEAT_MONEY))
 			{
-				unsigned char code_bytes[] = { 0x7C, 0xA5, 0xF0, 0x14 };
-				write_process(0x00A168F4, &code_bytes, 4);
+				unsigned char code_bytes[] = { 0x3F, 0x80, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00 };
+				write_process(0x00A168F4, &code_bytes, 8);
 			}
 
-            if(cheatFlags & CHEAT_SUPRE)
+/*             if(cheatFlags & CHEAT_SUPRE)
 			{
 				unsigned char code_bytes[] = { 0x30, 0x85, 0x00, 0x00 };
 				write_process(0x00BCE88C, &code_bytes, 4);
@@ -478,25 +503,25 @@ static void thread_entry(uint64_t arg)
 
             if(cheatFlags & CHEAT_STATS)
 			{
-				unsigned char code_bytes[] = { 0x38, 0x80, 0x00, 0x00, 0x90, 0x9E, 0x00, 0x2C, 0x90, 0x9E, 0x00, 0x30, 0x90, 0x9E, 0x00, 0x54, 0x90, 0x9E, 0x00, 0x74, 0x60, 0x00, 0x00, 0x00, 0x60, 0x00, 0x00, 0x00, 0x60, 0x00, 0x00, 0x00 };
+				unsigned char code_bytes[] = { 0x60, 0x00, 0x00, 0x00, 0x7C, 0xC4, 0x28, 0x10, 0x7C, 0xC4, 0x28, 0x10, 0x7C, 0xC4, 0x28, 0x10, 0x7C, 0xC4, 0x28, 0x10, 0x7C, 0xC4, 0x28, 0x10, 0x7C, 0xC4, 0x28, 0x10, 0x7C, 0xC4, 0x28, 0x10 };
 				write_process(0x00C90CE8, &code_bytes, 32);
 			}
             if(!(cheatFlags & CHEAT_STATS))
 			{
-				unsigned char code_bytes[] = { 0x7C, 0x84, 0x18, 0x14, 0x78, 0x84, 0x1F, 0x24, 0x7C, 0x63, 0x20, 0x10, 0x7C, 0x9F, 0x18, 0x14, 0x30, 0x84, 0x02, 0x48, 0x48, 0x00, 0x00, 0x08, 0x38, 0x80, 0x00, 0x00, 0x63, 0xA3, 0x00, 0x00 };
+				unsigned char code_bytes[] = { 0x60, 0x00, 0x00, 0x00, 0x7C, 0xC4, 0x28, 0x10, 0x7C, 0xC4, 0x28, 0x10, 0x7C, 0xC4, 0x28, 0x10, 0x7C, 0xC4, 0x28, 0x10, 0x7C, 0xC4, 0x28, 0x10, 0x7C, 0xC4, 0x28, 0x10, 0x7C, 0xC4, 0x28, 0x10 };
 				write_process(0x00C90CE8, &code_bytes, 32);
-			}
+			} */
 
-/*             if(cheatFlags & CHEAT_GOD)
+            if(cheatFlags & CHEAT_GOD)
 			{
-				unsigned char code_bytes[] = { 0x60, 0x00, 0x00, 0x00 };
-				write_process(0x0087D244, &code_bytes, 4);
+				unsigned char code_bytes[] = { 0x64, 0xC6, 0x20, 0x00 };
+				write_process(0x00755868, &code_bytes, 4);
 			}
             if(!(cheatFlags & CHEAT_GOD))
 			{
-				unsigned char code_bytes[] = { 0x40, 0x81, 0x00, 0x08 };
-				write_process(0x0087D244, &code_bytes, 4);
-			} */
+				unsigned char code_bytes[] = { 0x50, 0x86, 0xE8, 0x84 };
+				write_process(0x00755868, &code_bytes, 4);
+			}
 
 /*             if(cheatFlags & CHEAT_KNIFE)
 			{
@@ -528,10 +553,15 @@ static void thread_entry(uint64_t arg)
 
 int trainer_start(void)
 {
-    //create thread
+	//create thread
     sys_ppu_thread_t thread_id;
     sys_ppu_thread_create(&thread_id, thread_entry, 0, 1000, 0x1000, 0, "Cheat_Thread");
 
-	_sys_ppu_thread_exit(0);
+	get_kernel();
+	
+	if (dex_kernel)
+	{
+		_sys_ppu_thread_exit(0);
+	}
     return SYS_PRX_RESIDENT;
 }

@@ -1,0 +1,14 @@
+Cheat prx trainers for various games. You can toggle cheats on and off with
+simple msgdialog and OSK. The prx files should work fine for DEX with COBRA
+or for CEX with CCAPI installed.
+
+You could either use ingame_loader to patch eboots with these sprx files, or
+use my EBOOTloader.sprx file, to load from bootplugins.txt with COBRA and then
+load the trainer prx files with button combo to game process.
+
+If the trainer is successfully loaded to game process, you will get a message
+dialog, naming the game and also telling the button combo to call the menu.
+To call the menu, you have to press SELECT+START at any time in game.
+
+Credits to dron_3 for making this awesome base trainer sprx with ps3 msgdialog
+system gui.
