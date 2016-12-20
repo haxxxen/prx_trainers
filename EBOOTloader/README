@@ -1,4 +1,5 @@
-EBOOTloader.sprx file, to load from bootplugins.txt with COBRA.
+EBOOTloader.sprx file, to load from bootplugins.txt with COBRA (DO NOT USE
+IT WITH CCAPI!!!)
 
 To load any sprx file to game process you can edit sprx.txt in dev_hdd0/tmp
 to your likings.
@@ -8,10 +9,17 @@ press R1+O. If successfully loaded, you will get popup message, saying
 "PRX successfully loaded" and additionally saying path to loaded sprx file.
 Otherwise you will get error popup.
 
-Do note, that some games do not like to get loaded a sprx file this way and the
-PS3 will reboot if you exit game. It doesn't harm any damage when rebooting and
-you will not get the improper shutdown message. It just makes tripple beep and
-reboots, just like Tomb Raider Game. THIS I cannot fix unluckily. Besides, this
-works great. 
+IMPORTANT NOTE:
+
+When loading those prx trainers with EBOOTloader.sprx, you have to IMMEDIATELY
+CLOSE the ingame xmb DURING getting the "PRX successfully loaded" message.
+Otherwise, you could be stuck on pause screen on some games, or the msgdialog
+for the trainer menu cannot be openend at all on some games.
+
+Additionally, some games do not like to get loaded a sprx file this way and the
+PS3 will reboot if you exit game. It doesn't harm any damage when rebooting nor
+you won't get the improper shutdown message. It just makes tripple beep and
+reboots, just like Tomb Raider game. THIS I cannot fix unluckily and besides this,
+it works great. 
 
 Credits to OsirisX for his game_menu and his "loading to process" routine.
