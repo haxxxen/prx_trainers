@@ -11,6 +11,9 @@ Otherwise you will get error popup.
 
 IMPORTANT NOTE:
 
+You will need COBRA with ps3mapi enabled, since it uses its syscalls to load to
+process.
+
 When loading those prx trainers with EBOOTloader.sprx, you have to IMMEDIATELY
 CLOSE the ingame xmb DURING getting the "PRX successfully loaded" message.
 Otherwise, you could be stuck on pause screen on some games, or the msgdialog
